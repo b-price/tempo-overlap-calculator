@@ -35,6 +35,31 @@ h1 {
   line-height: 1.1;
 }
 
+.form {
+  font-size: 1.2em;
+  display: grid;
+  gap: 10px;
+  padding-bottom: 1.2em;
+  grid-template-columns: 40% 20% 40%;
+}
+
+.labels {
+  grid-column: 1;
+  text-align: end;
+}
+.inputs {
+  grid-column: 2;
+}
+.units {
+  grid-column: 3;
+  text-align: start;
+}
+#timeSig {
+
+  display: flex;
+  gap: 0.5em;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -45,6 +70,7 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  align-self: center;
 }
 button:hover {
   border-color: #646cff;
