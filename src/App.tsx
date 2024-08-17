@@ -1,12 +1,14 @@
-import {FormEvent, useState} from 'react'
+import { useState } from 'react'
 import { useForm, SubmitHandler } from "react-hook-form"
 import './App.css'
 
 interface Inputs {
     tempoA: string
     tempoB: string
-    timeSigA: string[]
-    timeSigB: string[]
+    timeSigATop: string
+    timeSigABot: string
+    timeSigBTop: string
+    timeSigBBot: string
     loopLength: string
     repeats: string
     tolerance: string
@@ -19,22 +21,24 @@ interface Results {
 }
 
 function calculateTempo(inputs: Inputs) {
-    let tempoDiff = inputs.tempoB / inputs.tempoA
-    const timeLengthDiff = (inputs.timeSigA[0] / inputs.timeSigA[1]) / (inputs.loopLength * (inputs.timeSigB[0] / inputs.timeSigB[1]))
-    const tempoLowBound = inputs.tempoB * (1 - inputs.tolerance)
-    const tempoHighBound = inputs.tempoB * (1 + inputs.tolerance)
+    let tempoDiff = parseFloat(inputs.tempoB) / parseFloat(inputs.tempoA)
+    const timeLengthDiff =
+        (parseInt(inputs.timeSigATop) / parseInt(inputs.timeSigABot)) /
+        (parseInt(inputs.loopLength) * (parseInt(inputs.timeSigBTop) / parseInt(inputs.timeSigBBot)))
+    const tempoLowBound = parseFloat(inputs.tempoB) * (1 - parseFloat(inputs.tolerance) / 100)
+    const tempoHighBound = parseFloat(inputs.tempoB) * (1 + parseFloat(inputs.tolerance) / 100)
     const viableJunctions: Results[] = []
 
     const getSectionEnd = (tempoDifference: number) => {
-        return Math.floor(inputs.repeats / (timeLengthDiff * tempoDifference))
+        return Math.floor(parseInt(inputs.repeats) / (timeLengthDiff * tempoDifference))
     }
 
     const sectionEnd = getSectionEnd(tempoDiff)
 
     for (let i = 1; i <= sectionEnd; i++){
         tempoDiff = 1 / (timeLengthDiff * i)
-        const newTempo = inputs.tempoA * tempoDiff
-        if (tempoDiff >= tempoLowBound && tempoDiff <= tempoHighBound) {
+        const newTempo = parseFloat(inputs.tempoA) * tempoDiff
+        if (newTempo >= tempoLowBound && newTempo <= tempoHighBound) {
             viableJunctions.push({
                 newTempo: newTempo,
                 measure: i,
@@ -42,77 +46,40 @@ function calculateTempo(inputs: Inputs) {
             })
         }
     }
+    console.log(viableJunctions)
     return viableJunctions
 }
 
 function App() {
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<Inputs>()
-    const [inputs, setInputs] = useState({
-        tempoA: '',
-        tempoB: '',
-        timeSigA: ['4', '4'],
-        timeSigB: ['4', '4'],
-        loopLength: '',
-        repeats: '',
-        tolerance: ''
-    })
+    const { register, handleSubmit, formState: { errors } } = useForm<Inputs>()
+    const onSubmit: SubmitHandler<Inputs> = data => setResults(calculateTempo(data))
+
     const [results, setResults] = useState<Results[]>([])
 
-    const handleChange = (event) => {
-        setInputs({
-            ...inputs,
-            [event.target.id]: event.target.value,
-        })
-        console.log(inputs)
-    }
-    const handleTimeSig = (event) => {
-        let input: string
-        let value
-        switch (event.target.id) {
-            case "timeSigA_top":
-                input = "timeSigA"
-                value = [event.target.value, inputs.timeSigA[1]]
-                break
-            case "timeSigA_bot":
-                input = "timeSigA"
-                value = [inputs.timeSigA[0], event.target.value]
-                break
-            case "timeSigB_top":
-                input = "timeSigB"
-                value = [event.target.value, inputs.timeSigB[1]]
-                break
-            case "timeSigB_bot":
-                input = "timeSigB"
-                value = [inputs.timeSigB[0], event.target.value]
-                break
-            default:
-                input = "timeSigA"
-                value = [4,4]
-                break
-        }
-        setInputs({
-            ...inputs,
-            [input]: value,
-        })
-    }
-
-    const handleButton = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
-        setResults(calculateTempo(inputs))
-    }
 
     function TimeSig(props){
+        const topName: string = props.name + 'Top'
+        const botName: string = props.name + 'Bot'
         return (
             <>
                 <label htmlFor={props.name} className={"labels"}>{props.display}</label>
                 <span id={"timeSig"}>
-                    <input type="text" onChange={handleTimeSig} value={props.value[0]} size={3} id={`${props.name}_top`}
-                           className={"inputs"}/>
+                    <input
+                        type="text"
+                        size={3}
+                        id={topName}
+                        className={"inputs"}
+                        {...register(topName, { required: true, pattern: /^\d+$/ })}
+                    />
                     <label htmlFor={"timeSigA"} className={"inputs"}>/</label>
-                    <input type="text" onChange={handleTimeSig} value={props.value[1]} size={3} id={`${props.name}_bot`}
-                       className={"inputs"}/>
+                    <input
+                        type="text"
+                        size={3}
+                        id={`${props.name}Bot`}
+                        className={"inputs"}
+                        {...register(botName, { required: true, pattern: /^\d+$/ })}
+                    />
                 </span>
-                <label htmlFor={"timeSigA"} className={"units"}></label>
             </>
 
         )
@@ -122,9 +89,15 @@ function App() {
         return (
             <>
                 <label htmlFor={props.name} className={"labels"}>{props.display}</label>
-                <input type="text" onChange={handleChange} value={props.value} size={5} id={props.name}
-                       className={"inputs"}/>
+                <input
+                    type="text"
+                    size={5}
+                    id={props.name}
+                    className={"inputs"}
+                    {...register(props.name, { required: true, pattern: /^\d+$/ })}
+                />
                 <label htmlFor={props.name} className={"units"}>{props.units}</label>
+                {props.errors && <p>Only numbers allowed!</p>}
             </>
         )
     }
@@ -143,59 +116,75 @@ function App() {
         resultDisplay.push(<h3>No viable overlaps!</h3>)
     }
 
-
     return (
         <>
 
             <h1>Tempo Overlap Calculator</h1>
             <div className="card">
-                <form className={"form"} onSubmit={handleButton}>
-                    {/*<Input name={"tempoA"} display={"Tempo A:"} value={inputs.tempoA} units={"bpm"}/>*/}
-                    {/*<TimeSig name={"timeSigA"} display={"Time Signature A:"} value={inputs.timeSigA}/>*/}
-                    {/*<Input name={"tempoB"} display={"Tempo B:"} value={inputs.tempoB} units={"bpm"}/>*/}
-                    {/*<TimeSig name={"timeSigB"} display={"Time Signature B:"} value={inputs.timeSigB}/>*/}
-                    {/*<Input name={"loopLength"} display={"Loop Length:"} value={inputs.loopLength} units={"measures"}/>*/}
-                    {/*<Input name={"repeats"} display={"Repeats:"} value={inputs.repeats} units={"loop repetitions"}/>*/}
-                    {/*<Input name={"tolerance"} display={"Change Tolerance +-:"} value={inputs.tolerance} units={"%"}/>*/}
-                    <label htmlFor={"tempoA"} className={"labels"}>Tempo A: </label>
-                    <input type="text" onChange={handleChange} value={inputs.tempoA} size={5} id={"tempoA"}
-                           className={"inputs"} required onInvalid={}
-                    />
-                    <label htmlFor={"tempoA"} className={"units"}>bpm</label>
+                <form className={"form"} onSubmit={handleSubmit(onSubmit)}>
+                    <Input name={"tempoA"} display={"Tempo A:"} units={"bpm"} errors={errors.tempoA}/>
+                    <TimeSig name={"timeSigA"} display={"Time Sig. A:"}/>
+                    <Input name={"tempoB"} display={"Tempo B:"} units={"bpm"} errors={errors.tempoB}/>
+                    <TimeSig name={"timeSigB"} display={"Time Sig. B:"}/>
+                    <Input name={"loopLength"} display={"Loop Length:"} units={"measures"} errors={errors.loopLength}/>
+                    <Input name={"repeats"} display={"Repeats:"} units={"loops"} errors={errors.repeats}/>
+                    <Input name={"tolerance"} display={"Tolerance +-:"} units={"%"} errors={errors.tolerance}/>
 
-                    <label htmlFor={"timeSigA"} className={"labels"}>Time Sig. A: </label>
-                    <span id={"timeSig"}>
-                        <input type="text" onChange={handleTimeSig} value={inputs.timeSigA[0]} size={3}
-                               id={"timeSigA_top"}
-                               className={"inputs"}/>
-                        <label htmlFor={"timeSigA"} className={"inputs"}>/</label>
-                        <input type="text" onChange={handleTimeSig} value={inputs.timeSigA[1]} size={3}
-                               id={"timeSigA_bot"}
-                               className={"inputs"}/>
-                    </span>
+                    {/*<label htmlFor={"tempoA"} className={"labels"}>Tempo A: </label>*/}
+                    {/*<input*/}
+                    {/*    type="text"*/}
+                    {/*    size={5}*/}
+                    {/*    id={"tempoA"}*/}
+                    {/*    className={"inputs"}*/}
+                    {/*    {...register("tempoA", { required: true, pattern: /^\d+$/ })}*/}
+                    {/*/>*/}
+                    {/*<label htmlFor={"tempoA"} className={"units"}>bpm</label>*/}
 
-                    <label htmlFor={"timeSigA"} className={"units"}></label>
+                    {/*<label htmlFor={"timeSigA"} className={"labels"}>Time Sig. A: </label>*/}
+                    {/*<span id={"timeSig"}>*/}
+                    {/*    <input*/}
+                    {/*        type="text"*/}
+                    {/*        size={3}*/}
+                    {/*        id={"timeSigA_top"}*/}
+                    {/*        className={"inputs"}*/}
+                    {/*        {...register("timeSigATop", { required: true })}*/}
+                    {/*    />*/}
+                    {/*    <label htmlFor={"timeSigA"} className={"inputs"}>/</label>*/}
+                    {/*    <input*/}
+                    {/*        type="text"*/}
+                    {/*        size={3}*/}
+                    {/*        id={"timeSigA_bot"}*/}
+                    {/*        className={"inputs"}*/}
+                    {/*        {...register("timeSigABot", { required: true })}*/}
+                    {/*    />*/}
+                    {/*</span>*/}
+                    {/*<label htmlFor={"timeSigA"} className={"units"}></label>*/}
 
 
-                    <label htmlFor={"tempoB"} className={"labels"}>Tempo B: </label>
-                    <input type="text" onChange={handleChange} value={inputs.tempoB} size={5} id={"tempoB"}
-                           className={"inputs"}/>
-                    <label htmlFor={"tempoB"} className={"units"}>bpm</label>
+                    {/*<label htmlFor={"tempoB"} className={"labels"}>Tempo B: </label>*/}
+                    {/*<input*/}
+                    {/*    type="text"*/}
+                    {/*    size={5}*/}
+                    {/*    id={"tempoB"}*/}
+                    {/*    className={"inputs"}*/}
+                    {/*    {...register("tempoB", { required: true })}*/}
+                    {/*/>*/}
+                    {/*<label htmlFor={"tempoB"} className={"units"}>bpm</label>*/}
 
-                    <label htmlFor={"loopLength"} className={"labels"}>Loop Length: </label>
-                    <input type="text" onChange={handleChange} value={inputs.loopLength} size={5} id={"loopLength"}
-                           className={"inputs"}/>
-                    <label htmlFor={"loopLength"} className={"units"}>measures</label>
+                    {/*<label htmlFor={"loopLength"} className={"labels"}>Loop Length: </label>*/}
+                    {/*<input type="text" onChange={handleChange} value={inputs.loopLength} size={5} id={"loopLength"}*/}
+                    {/*       className={"inputs"}/>*/}
+                    {/*<label htmlFor={"loopLength"} className={"units"}>measures</label>*/}
 
-                    <label htmlFor={"repeats"} className={"labels"}>Repeats: </label>
-                    <input type="text" onChange={handleChange} value={inputs.repeats} size={5} id={"repeats"}
-                           className={"inputs"}/>
-                    <label htmlFor={"repeats"} className={"units"}></label>
+                    {/*<label htmlFor={"repeats"} className={"labels"}>Repeats: </label>*/}
+                    {/*<input type="text" onChange={handleChange} value={inputs.repeats} size={5} id={"repeats"}*/}
+                    {/*       className={"inputs"}/>*/}
+                    {/*<label htmlFor={"repeats"} className={"units"}></label>*/}
 
-                    <label htmlFor={"tolerance"} className={"labels"}>Tolerance +-: </label>
-                    <input type="text" onChange={handleChange} value={inputs.tolerance} size={5} id={"tolerance"}
-                           className={"inputs"}/>
-                    <label htmlFor={"tolerance"} className={"units"}>%</label>
+                    {/*<label htmlFor={"tolerance"} className={"labels"}>Tolerance +-: </label>*/}
+                    {/*<input type="text" onChange={handleChange} value={inputs.tolerance} size={5} id={"tolerance"}*/}
+                    {/*       className={"inputs"}/>*/}
+                    {/*<label htmlFor={"tolerance"} className={"units"}>%</label>*/}
 
                     <button type={"submit"}>
                         Calculate
