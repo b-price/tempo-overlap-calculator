@@ -89,6 +89,12 @@ label {
   color: #888;
   text-align: start;
 }
+.error {
+  text-align: start;
+  grid-column: 1;
+  color: #cf5d59;
+  font-size: 0.6em;
+}
 
 button {
   border-radius: 8px;
@@ -119,7 +125,7 @@ button:focus-visible {
     color: #747bff;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: #dcdcdc;
   }
 }
 
