@@ -1,50 +1,17 @@
-# React + TypeScript + Vite
+# Loop Tempo Overlap Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Are you, like me, in some musical situation where you need to change tempos in a song but your looping technology only offers one tempo without stopping and starting over? You're in luck! This tool will calculate where your new tempo overlaps your old one, and if it doesn't, will suggest a new tempo within a tolerance you provide. You also get the amount of repeats you can do and how much the generated tempo deviates from the one you had in mind.
 
-Currently, two official plugins are available:
+Tempo A: This is the tempo you don't want to change; the tempo of the rest of the song.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Time Sig. A: The time signature of Tempo A. You can enter wacky values like 4/7 and it will still be correct.
 
-## Expanding the ESLint configuration
+Tempo B: The tempo to be changed in order to fit your loop into an integer repetition of Tempo A. Better results are achieved when Tempo A is higher than Tempo B.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+Time Sig. B: The time signature of Tempo B (the part with the loop).
 
-- Configure the top-level `parserOptions` property like this:
+Loop Length: The length of the loop, in measures of Tempo B.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+Repeats: How many times the loop repeats in the section of the song.
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+Tolerance: The percentage of change in bpm (up or down) from Tempo B you are willing to accept for the new tempo. Low values will not likely result in any viable tempos and high values will provide too many and will likely change your part too much. 5 to 10% is usually the sweet spot.
