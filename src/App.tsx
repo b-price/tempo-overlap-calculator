@@ -198,7 +198,7 @@ function App() {
                     will provide too many and will likely change your part too much. 5 to 10% is usually the sweet spot.
                 </p>
                 <p>I created this tool for my project <a href={"https://atthegraves.bandcamp.com"}>At the Graves</a>.</p>
-                <p>Support me here if you'd like: <a href={"https://www.patreon.com/bricedev"}>Patreon</a></p>
+                {/*<p>Support me here if you'd like: <a href={"https://www.patreon.com/bricedev"}>Patreon</a></p>*/}
             </div>
         </>
     )
