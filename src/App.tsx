@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm, SubmitHandler } from "react-hook-form"
+import {useForm, SubmitHandler, FieldError} from "react-hook-form"
 import './App.css'
 
 const defaultValues = {
@@ -30,6 +30,21 @@ interface Results {
     measure: number
     repeats: number
     tempoDiff: number
+}
+
+interface TimeSigProps {
+    name: "timeSigA" | "timeSigB"
+    display: string
+    errorsTop: FieldError | undefined
+    errorsBot: FieldError | undefined
+}
+
+interface InputProps {
+    name: "tempoA" | "tempoB" | "timeSigATop" | "timeSigABot" | "timeSigBTop" | "timeSigBBot" | "loopLength" | "repeats" | "tolerance"
+    display: string
+    units: string
+    errors: FieldError | undefined
+    float?: boolean
 }
 
 function calculateTempo(inputs: Inputs) {
@@ -68,9 +83,9 @@ function App() {
 
     const [results, setResults] = useState<Results[]>([])
 
-    function TimeSig(props){
-        const topName: string = props.name + 'Top'
-        const botName: string = props.name + 'Bot'
+    function TimeSig(props: TimeSigProps){
+        const topName: "timeSigATop" | "timeSigBTop" = props.name === "timeSigA"? "timeSigATop" : "timeSigBTop"
+        const botName: "timeSigABot" | "timeSigBBot" = props.name === "timeSigA"? "timeSigABot" : "timeSigBBot"
         return (
             <>
                 <label htmlFor={props.name} className={"leftSide"}>{props.display}</label>
@@ -98,7 +113,7 @@ function App() {
         )
     }
 
-    function Input(props) {
+    function Input(props: InputProps) {
         return (
             <>
                 <label htmlFor={props.name} className={"leftSide"}>{props.display}</label>
