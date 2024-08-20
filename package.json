@@ -1,5 +1,5 @@
 {
-  "name": "loop-tempo-overlap",
+  "name": "tempo-overlap-calculator",
   "private": true,
   "version": "0.0.0",
   "type": "module",
